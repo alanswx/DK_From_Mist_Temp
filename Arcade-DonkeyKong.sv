@@ -137,8 +137,8 @@ assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
 
 wire [1:0] ar = status[20:19];
 
-assign VIDEO_ARX = (!ar) ? (status[2]  ? 8'd4 : 8'd3) : (ar - 1'd1);
-assign VIDEO_ARY = (!ar) ? (status[2]  ? 8'd3 : 8'd4) : 12'd0;
+assign VIDEO_ARX = (!ar) ? ((status[2]|mod_pestplace)  ? 8'd4 : 8'd3) : (ar - 1'd1);
+assign VIDEO_ARY = (!ar) ? ((status[2]|mod_pestplace)  ? 8'd3 : 8'd4) : 12'd0;
 
 
 
@@ -146,7 +146,7 @@ assign VIDEO_ARY = (!ar) ? (status[2]  ? 8'd3 : 8'd4) : 12'd0;
 localparam CONF_STR = {
 	"A.DKONG;;",
 	"H0OJK,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
-	"H0O2,Orientation,Vert,Horz;",
+	"H1H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",  
 	"-;",
 	"DIP;",
@@ -203,7 +203,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask(direct_video),
+	.status_menumask({mod_pestplace,direct_video}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
@@ -244,7 +244,6 @@ end
 
 
 
-wire no_rotate = status[2] & ~direct_video;
 
 
 wire m_up_2     = joy[3];
@@ -276,6 +275,7 @@ always @(posedge clk_49) begin
         ce_pix <= !div;
 end
 
+wire no_rotate = status[2] | direct_video | mod_pestplace;
 wire rotate_ccw = 0;
 screen_rotate screen_rotate (.*);
 
@@ -385,7 +385,7 @@ dkong_top dkong(
 
 	.I_DIP_SW(sw[0]),
 
-	.I_DKJR(mod_dkjr),
+	.I_DKJR(mod_dkjr|mod_pestplace|mod_dk3),
 	.I_DK3B(mod_dk3),
 	.I_RADARSCP(mod_radarscope),
 	.I_PESTPLCE(mod_pestplace),
